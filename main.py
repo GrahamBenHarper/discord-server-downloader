@@ -20,7 +20,10 @@ bot = discord.Client(intents=intents)
 #       'description': DESCRIPTION
 def save_message(message, file):
     # first write an AUTHOR @ TIME line
-    file.write('{} @ {}\n'.format(message.author, message.created_at))
+    file.write('{} @ {}'.format(message.author, message.created_at))
+    if message.interaction != None:
+        file.write(' interaction "{}" by {}'.format(message.interaction.name, message.interaction.user))
+    file.write('\n')
 
     # then write content
     for x in message.clean_content.split('\n'):
