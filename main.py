@@ -46,7 +46,7 @@ def save_message(message, file):
     file.write('\n')
 
 # save all channels of a guild given by string guild_id
-async def save_guild(guild_id):
+async def save_guild_messages(guild_id):
     guild = bot.get_guild(int(guild_id))
     msgs = []
 
@@ -58,7 +58,7 @@ async def save_guild(guild_id):
             os.mkdir(str(guild_id))
         except OSError:
             pass
-        with open('{}/{}'.format(guild_id, channel), encoding='utf-8', mode='a') as file:
+        with open('{}/{}.txt'.format(guild_id, channel), encoding='utf-8', mode='a') as file:
             for message in msgs:
                 save_message(message, file)
 
@@ -85,12 +85,77 @@ async def save_guild(guild_id):
         msgs.sort(key=lambda q: q.created_at)
         await save(name)
 
+# save all emojis into the "emojis" subfolder for the guild
+async def save_guild_emojis(guild_id):
+    guild = bot.get_guild(int(guild_id))
+
+    emojis = guild.emojis
+    if len(emojis) == 0:
+        return
+
+    print(f"Got {len(emojis)} emojis!")
+
+    try:
+        os.mkdir(str(guild_id)+"/emojis")
+    except OSError:
+        pass
+
+    for emoji in emojis:
+        # since emoji.format is not available
+        extension = emoji.url.split(".")[-1]
+        await emoji.save('{}/emojis/{}.{}'.format(guild_id, emoji.name, extension))
+
+# save all stickers into the "stickers" subfolder for the guild
+async def save_guild_stickers(guild_id):
+    guild = bot.get_guild(int(guild_id))
+
+    stickers = guild.stickers
+    if len(stickers) == 0:
+        return
+
+    print(f"Got {len(stickers)} stickers!")
+
+    try:
+        os.mkdir(str(guild_id)+"/stickers")
+    except OSError:
+        pass
+
+    for sticker in stickers:
+        # sticker.format is available, but do it this way instead
+        extension = sticker.url.split(".")[-1]
+        await sticker.save('{}/stickers/{}.{}'.format(guild_id, sticker.name, extension))
+
+# save all soundboard entries into the "soundboard" subfolder for the guild
+async def save_guild_soundboard(guild_id):
+    guild = bot.get_guild(int(guild_id))
+
+    soundboard = guild.soundboard_sounds
+    if len(soundboard) == 0:
+        return
+
+    print(f"Got {len(soundboard)} sounds!")
+
+    try:
+        os.mkdir(str(guild_id)+"/soundboard")
+    except OSError:
+        pass
+
+    for sound in soundboard:
+        # sound.format is not available, so we save without an extension
+        await sound.save('{}/soundboard/{}'.format(guild_id,sound.name))
 
 @bot.event
 async def on_ready():
     print('Saving {}...'.format(GUILD_ID))
 
-    await save_guild(GUILD_ID)
+    print("Saving messages...")
+    await save_guild_messages(GUILD_ID)
+    print("Saving emojis...")
+    await save_guild_emojis(GUILD_ID)
+    print("Saving stickers...")
+    await save_guild_stickers(GUILD_ID)
+    print("Saving soundboard...")
+    await save_guild_soundboard(GUILD_ID)
 
     print('Done saving...')
 
